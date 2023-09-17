@@ -33,10 +33,11 @@ def find_nearest_times_with_limit_and_sort(
             platform_identifier_replaced = platform_identifier.replace(".", "[36]")
         elif "FDCC" in platform_identifier:
             platform_identifier_replaced = platform_identifier.replace(".", "[46]")
+        elif "RadC" in platform_identifier:
+            platform_identifier_replaced = platform_identifier.replace(".", "[46]")
         else:
             # Handle other cases or raise an error if needed
             platform_identifier_replaced = platform_identifier
-
         results = []
 
         # Convert the start_time parameter to a UTC datetime object
