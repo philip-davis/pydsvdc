@@ -142,9 +142,13 @@ def find_extreme_power_between_dates(platform_identifier, start_time, end_time, 
 
     # Replace the "." with "3" or "6" based on the user input to handle variations in platform identifiers
     if "RadM" in platform_identifier:
-        platform_identifier = platform_identifier.replace(".", "[36]")
+        platform_identifier = "^" + platform_identifier.replace(".", "[36]")
     elif "FDCC" in platform_identifier:
-        platform_identifier = platform_identifier.replace(".", "[46]")
+        platform_identifier = "^" + platform_identifier.replace(".", "[46]")
+    elif "RadC" in platform_identifier:
+        platform_identifier_replaced = "^" + platform_identifier.replace(".", "[46]")
+    else:
+        raise ValueError("Invalid platform identifier")
 
     # Define the query based on the start and end times, platform identifier, and power field
     query = {

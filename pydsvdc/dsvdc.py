@@ -47,7 +47,6 @@ def _do_goes_metadata_query(query):
         power_field = query['op_on']
         op = "maximum" if query['op'] == 'max' else 'potato'
         results = find_extreme_power_between_dates(platform_identifier, start_time, end_time, power_field, op, limit)
-        print(results)
     elif 'start_time' not in query and 'end_time' not in query:
         limit = 1
         platform_identifier = query['platform_identifier']
@@ -73,11 +72,11 @@ class DsVdc:
                 query['platform_identifier'] = _get_abi_platform_id(kwargs['name'])
             var_name = kwargs['name']
         if 'time' in kwargs:
-            query['time'] = parser.parse(kwargs['time'])
+            query['time'] = parser.parse(str(kwargs['time']))
         if 'start_time' in kwargs:
-            query['start_time'] = parser.parse(kwargs['start_time'])
+            query['start_time'] = parser.parse(str(kwargs['start_time']))
         if 'end_time' in kwargs:
-            query['end_time'] = parser.parse(kwargs['end_time'])
+            query['end_time'] = parser.parse(str(kwargs['end_time']))
         if 'find_max' in kwargs:
             query['op'] = 'max'
             query['op_on'] = kwargs['find_max']
@@ -90,16 +89,20 @@ class DsVdc:
             
         handles = _do_metadata_query(query)
         results = []
-        for (url, file_index) in handles:
+        for h in handles:
+            url = h[0]
+            file_index = h[1]
+            tags = h[2:]
+                
             ord_tstamp = url.split('_')[3][1:8] + 'T' + url.split('_')[3][8:-1]
             tstamp = parser.isoparse(ord_tstamp)
             dsver = _pack_version(tstamp.year, int(ord_tstamp[4:7]), tstamp.hour, file_index)
-            results.append((tstamp, self.ds.Get(var_name, dsver, lb, ub, -1, None)))
+            results.append((tstamp, self.ds.Get(var_name, dsver, lb, ub, -1, None), *tags))
         return(results)
 
 
 if __name__ == "__main__":
     dv = DsVdc(conn_str = 'sockets://172.17.0.2:4000')
     data = dv.query(domain = 'goes17', name = 'FDCC/Mask', time = '202005010001', lb = (0,0), ub = (100, 100))
-    #data = dv.query(domain = 'goes17', name = 'FDCC/Mask', start_time = '202005010000', end_time = '202010312359', find_max = 'total_number_of_pixels_with_fire_area', lb = (0,0), ub = (100,100))
+    data = dv.query(domain = 'goes17', name = 'FDCC/Mask', start_time = '202005010000', end_time = '202010312359', find_max = 'total_number_of_pixels_with_fire_area', lb = (0,0), ub = (1500, 2500))
     print(data)
