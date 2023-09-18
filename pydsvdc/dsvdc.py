@@ -1,4 +1,4 @@
-from vdcmetadata import *
+from pydsvdc.vdcmetadata import *
 from dateutil import parser
 from bitstring import pack, Bits
 from dspaces import DSClient
@@ -58,7 +58,7 @@ class DsVdc:
         self.ds = DSClient(conn = conn_str)
         self.ds.SetNSpace(domain)
 
-    def query(self, dtype, **kwargs):
+    def query(self, **kwargs):
         query = {}
         query['domain'] = self.domain
         if self.domain == 'goes17':
@@ -82,32 +82,16 @@ class DsVdc:
         ub = kwargs['ub']
             
         handles = _do_metadata_query(query)
-        print(handles)
+        results = []
         for (url, file_index) in handles:
             ord_tstamp = url.split('_')[3][1:8] + 'T' + url.split('_')[3][8:-1]
             tstamp = parser.isoparse(ord_tstamp)
             dsver = _pack_version(tstamp.year, int(ord_tstamp[4:7]), tstamp.hour, file_index)
-            print(self.ds.Get(var_name, dsver, lb, ub, dtype, -1))
+            results.append((tstamp, self.ds.Get(var_name, dsver, lb, ub, -1, None)))
+        return(results)
+
 
 if __name__ == "__main__":
     dv = DsVdc(conn_str = 'sockets://172.17.0.2:4000')
-    data = dv.query(domain = 'goes17', dtype=numpy.short, name = 'FDCC/Mask', time = '202005010001', lb = (0,0), ub = (100, 100))
+    data = dv.query(domain = 'goes17', name = 'FDCC/Mask', time = '202005010001', lb = (0,0), ub = (100, 100))
     print(data)
-    '''
-    platform_identifier = "ABI-L2-FDCC"  # Please note that the "." is important in both cases for the regex
-    start_time = datetime(2020, 8, 2, 23, 14, 0)  # Use a datetime object here
-    print(start_time)
-    limit = 1  # None will retrieve all from the given point onwards
-    print(platform_identifier, start_time, limit)
-    results = find_nearest_times_with_limit_and_sort(platform_identifier, start_time, limit)
-
-    if results:
-        for i, result in enumerate(results):
-            url, file_index = result
-            ord_tstamp = url.split('_')[3][1:8] + 'T' + url.split('_')[3][8:-1]
-            tstamp = parser.isoparse(ord_tstamp)
-            dsver = _pack_version(tstamp.year, int(ord_tstamp[4:7]), tstamp.hour, file_index)
-            print(tstamp, dsver, _unpack_version(dsver), result)
-    else:
-        print("No matching times found.")
-    '''
