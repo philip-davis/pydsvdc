@@ -1,6 +1,7 @@
 import pymongo
 from pymongo import MongoClient
 from datetime import datetime, timezone
+import time
 import re
 import os
 
@@ -30,11 +31,11 @@ def find_nearest_times_with_limit_and_sort(
 
         # Replace the "." with "3" and "6" based on user input to handle variations in platform identifiers
         if "RadM" in platform_identifier:
-            platform_identifier_replaced = platform_identifier.replace(".", "[36]")
+            platform_identifier_replaced = "^" + platform_identifier.replace(".", "[36]")
         elif "FDCC" in platform_identifier:
-            platform_identifier_replaced = platform_identifier.replace(".", "[46]")
+            platform_identifier_replaced = "^" + platform_identifier.replace(".", "[46]")
         elif "RadC" in platform_identifier:
-            platform_identifier_replaced = platform_identifier.replace(".", "[46]")
+            platform_identifier_replaced = "^" + platform_identifier.replace(".", "[46]")
         else:
             # Handle other cases or raise an error if needed
             platform_identifier_replaced = platform_identifier
@@ -45,7 +46,7 @@ def find_nearest_times_with_limit_and_sort(
 
         # Construct the query to find documents matching the modified platform identifier and start time
         query = {
-            "Platform Identifier": {"$regex": platform_identifier_replaced},
+                "Platform Identifier": {"$regex": platform_identifier_replaced},
             "Observation Start Date & Time": {"$gte": start_time_utc}
         }
 
@@ -91,6 +92,8 @@ def get_entries_between_times(database_uri, start_time, end_time, platform_ident
         platform_identifier_replaced = platform_identifier.replace(".", "3")
     elif "FDCC" in platform_identifier:
         platform_identifier_replaced = platform_identifier.replace(".", "6")
+    elif "RadC" in platform_identifier:
+        platform_identifier_replaced = platform_identifier.replace(".", "[46]")
     else:
         raise ValueError("Invalid platform identifier")
 
@@ -165,7 +168,7 @@ def find_extreme_power_between_dates(platform_identifier, start_time, end_time, 
         file_name = document.get("File Name", "N/A")
         index = document.get("Index", "N/A")
         power_value = document.get(power_field, "N/A")
-        results.append((file_name, index))
+        results.append((file_name, index, power_value))
 
     # Close the MongoDB connection
     client.close()

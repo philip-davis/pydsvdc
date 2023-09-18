@@ -40,7 +40,14 @@ def _get_abi_platform_id(name):
 def _do_goes_metadata_query(query):
     results = []
     if 'op' in query:
-        pass
+        limit = 1
+        platform_identifier = query['platform_identifier']
+        start_time = query['start_time']
+        end_time = query['end_time']
+        power_field = query['op_on']
+        op = "maximum" if query['op'] == 'max' else 'potato'
+        results = find_extreme_power_between_dates(platform_identifier, start_time, end_time, power_field, op, limit)
+        print(results)
     elif 'start_time' not in query and 'end_time' not in query:
         limit = 1
         platform_identifier = query['platform_identifier']
@@ -94,4 +101,5 @@ class DsVdc:
 if __name__ == "__main__":
     dv = DsVdc(conn_str = 'sockets://172.17.0.2:4000')
     data = dv.query(domain = 'goes17', name = 'FDCC/Mask', time = '202005010001', lb = (0,0), ub = (100, 100))
+    #data = dv.query(domain = 'goes17', name = 'FDCC/Mask', start_time = '202005010000', end_time = '202010312359', find_max = 'total_number_of_pixels_with_fire_area', lb = (0,0), ub = (100,100))
     print(data)
