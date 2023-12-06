@@ -1,8 +1,11 @@
 from pydsvdc.vdcmetadata import *
+from pydsvdc.nsdfstream import *
 from dateutil import parser
 from bitstring import pack, Bits
 from dspaces import DSClient
+from kafka import KafkaConsumer
 import numpy
+from abc import ABC, abstractmethod 
 
 def _unpack_version(version):
     bits = Bits(uint=version, length=32)
@@ -63,6 +66,10 @@ class DsVdc:
         self.domain = domain
         self.ds = DSClient(conn = conn_str)
         self.ds.SetNSpace(domain)
+
+    def sub(self, **kwargs):
+        estream = NSDFEventStream('test')    
+        return estream 
 
     def query(self, **kwargs):
         query = {}
