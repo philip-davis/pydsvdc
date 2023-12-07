@@ -3,21 +3,15 @@ from pydsvdc.nsdfstream import *
 from dateutil import parser
 from bitstring import pack, Bits
 from dspaces import DSClient
-from kafka import KafkaConsumer
 import numpy
-from abc import ABC, abstractmethod 
 
-def _unpack_version(version):
-    bits = Bits(uint=version, length=32)
-    check, year, day, hour, fnum = bits.unpack('uint:2, uint:8, uint:9, uint:5, uint:8')
-    if check != 0:
-        print(f'WARNING: version check value mismatch. Expected 0, got {check}.', file=sys.stderr)
-    return(1900+year, day, hour, fnum)
-
-def _pack_version(year, day, hour, fnum):
-    check = 0
-    bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, fnum)
-    if check != 0:
+def _pack_version(year, day, hour, fnum, check = 0):
+    if check == 0:
+        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, fnum)
+    elif check == 1:
+        minutes = fnum
+        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, minutes)
+    else
         print(f'WARNING: version check value mismatch. Expected 0, got {check}.', file=sys.stderr)
     return(bits.uint)
 

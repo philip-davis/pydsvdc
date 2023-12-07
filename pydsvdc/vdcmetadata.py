@@ -6,12 +6,13 @@ import re
 import os
 
 def get_mongo_conn_str():
-    mongo_cred = os.environ.get("VDC_CREDENTIALS", None)
-    mongo_sock = os.environ.get("VDC_SOCKET", None) 
+    mongo_cred = 'admin:sci%40utah'
+    mongo_sock = '54.145.37.197:27017' 
+    print("test")
     if mongo_cred is None or mongo_sock is None:
         print("ERROR: please set environment variables VDC_CREDENTIALS and VDC_SOCKET")
         return(None)
-    return f'mongodb://{mongo_cred}@{mongo_sock}/?authSource=api'
+    return f'mongodb://{mongo_cred}@{mongo_sock}/?authMechanism=DEFAULT'	
 
 def find_nearest_times_with_limit_and_sort(
     platform_identifier, start_time, limit=1, sort_direction="ascending"

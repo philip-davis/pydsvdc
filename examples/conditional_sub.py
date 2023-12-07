@@ -7,13 +7,15 @@ import json
 import uuid
 import re
 
-def _pack_version(year, day, hour, fnum):
-    check = 0
-    bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, fnum)
-    if check != 0:
+def _pack_version(year, day, hour, fnum, check = 0):
+    if check == 0:
+        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, fnum)
+    elif check == 1:
+        minutes = fnum
+        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, minutes)
+    else:
         print(f'WARNING: version check value mismatch. Expected 0, got {check}.', file=sys.stderr)
     return(bits.uint)
-
 
 
 def _get_channel(channel_str):
@@ -70,8 +72,8 @@ class NSDFEventStream:
             if hit:
                 ord_tstamp = url.split('_')[3][1:8] + 'T' + url.split('_')[3][8:-1]
                 tstamp = parser.isoparse(ord_tstamp)
-                dsver = _pack_version(tstamp.year, int(ord_tstamp[4:7]), tstamp.hour, file_index)
-                return {'tstamp':tstamp, 'data':self.ds.Get(name, dsver, None, None, -1, None)}
+                dsver = _pack_version(tstamp.year, int(ord_tstamp[4:7]), tstamp.hour, tstamp.minute, check = 1)
+                return {'tstamp':tstamp, 'data':self.ds.Get(self.name, dsver, None, None, -1, None)}
             else:
                 print("not ", url)
         return True
@@ -102,9 +104,11 @@ def sub_fn(a):
     else:
         return(None)
 
+print("test")
 dv = DsVdc(conn_str)
+print("test2")
 #subscription = dv.sub(f'RadC/C04/Rad', start = '20230101', end = '20240630', lb = lb, ub = ub, xform = sub_fn)
-subscription = sub(dv, name = f'RadC/C11/Rad', start_time = '20220101', end_time = '20230630', xform = sub_fn)
+subscription = sub(dv, name = f'RadC/C01/Rad', start_time = '20220101', end_time = '20230630', xform = sub_fn)
 
 print(f'subscription handle: {subscription.handle}')
 for result in subscription:
