@@ -4,14 +4,16 @@ from dateutil import parser
 from bitstring import pack, Bits
 from dspaces import DSClient
 import numpy
+import uuid
+import re
 
 def _pack_version(year, day, hour, fnum, check = 0):
     if check == 0:
         bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, fnum)
     elif check == 1:
         minutes = fnum
-        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, minutes)
-    else
+        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 1, year-1900, day, hour, minutes)
+    else:
         print(f'WARNING: version check value mismatch. Expected 0, got {check}.', file=sys.stderr)
     return(bits.uint)
 
@@ -33,6 +35,10 @@ def _get_abi_platform_id(name):
         zone = name_parts[1]
         channel = _get_channel(name_parts[2])
         return(f'ABI-L1b-Rad{zone}-M.C{channel:02d}')
+
+def _url_to_tstamp(url):
+    ord_tstamp = url.split('_')[3][1:8] + 'T' + url.split('_')[3][8:-1]
+    return(parser.isoparse(ord_tstamp))
 
 def _do_goes_metadata_query(query):
     results = []
@@ -56,14 +62,28 @@ def _do_metadata_query(query):
         return(_do_goes_metadata_query(query))
 
 class DsVdc:
-    def __init__(self, conn_str = None, domain = 'goes17'):
+    def __init__(self, conn_str = None, domain = 'goes17', event_content = 'nasa-demo'):
         self.domain = domain
         self.ds = DSClient(conn = conn_str)
         self.ds.SetNSpace(domain)
+        self.topic = event_context
 
     def sub(self, **kwargs):
-        estream = NSDFEventStream('test')    
-        return estream 
+        name = kwargs['name']
+        if 'start_time' in kwargs:
+            start_time = parser.parse(str(kwargs['start_time']))
+        if 'end_time' in kwargs:
+            end_time = parser.parse(str(kwargs['end_time']))
+        if 'xform' in kwargs:
+            fn = kwargs['xform']
+        else:
+            fn = None
+        matchfns = []
+        #matchfns = [lambda a,name=name : re.compile(_get_abi_platform_id(name)).search(a)]
+        matchfns.append(lambda a,start_time=start_time : _url_to_tstamp(a) >= start_time)
+        termfn = lambda a, end_time=end_time : _url_to_tstamp(a) > end_time
+        estream = NSDFEventStream(self.ds, matchfns, termfn, self.topic, name, fn)
+        return estream
 
     def query(self, **kwargs):
         query = {}
