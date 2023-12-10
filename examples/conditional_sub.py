@@ -24,7 +24,7 @@ def sub_fn(a):
 
 dv = DsVdc()
 #dv = DsVdc(conn_str)
-subscription = dv.sub(dv, name = f'RadC/C12/Rad', start_time = '20220101', end_time = '20230630', xform = sub_fn)
+subscription = dv.sub(name = f'FDCC/Area', start_time = '20220101', end_time = '20230630', xform = sub_fn)
 
 print(f'subscription handle: {subscription.handle}')
 for result in subscription:

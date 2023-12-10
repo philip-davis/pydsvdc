@@ -62,7 +62,7 @@ def _do_metadata_query(query):
         return(_do_goes_metadata_query(query))
 
 class DsVdc:
-    def __init__(self, conn_str = None, domain = 'goes17', event_content = 'nasa-demo'):
+    def __init__(self, conn_str = None, domain = 'goes17', event_context = 'nasa-demo'):
         self.domain = domain
         self.ds = DSClient(conn = conn_str)
         self.ds.SetNSpace(domain)
@@ -79,7 +79,7 @@ class DsVdc:
         else:
             fn = None
         matchfns = []
-        #matchfns = [lambda a,name=name : re.compile(_get_abi_platform_id(name)).search(a)]
+        matchfns = [lambda a,name=name : re.compile(_get_abi_platform_id(name)).search(a)]
         matchfns.append(lambda a,start_time=start_time : _url_to_tstamp(a) >= start_time)
         termfn = lambda a, end_time=end_time : _url_to_tstamp(a) > end_time
         estream = NSDFEventStream(self.ds, matchfns, termfn, self.topic, name, fn)

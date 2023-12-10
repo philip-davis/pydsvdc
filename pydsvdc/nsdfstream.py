@@ -1,9 +1,23 @@
 from kafka import KafkaConsumer
 from dateutil import parser
 from dspaces import DSClient
+from bitstring import pack, Bits
 import json
 import uuid
 
+def _pack_version(year, day, hour, fnum, check = 0):
+    if check == 0:
+        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 0, year-1900, day, hour, fnum)
+    elif check == 1:
+        minutes = fnum
+        bits = pack('uint:2, uint:8, uint:9, uint:5, uint:8', 1, year-1900, day, hour, minutes)
+    else:
+        print(f'WARNING: version check value mismatch. Expected 0, got {check}.', file=sys.stderr)
+    return(bits.uint)
+
+def get_kafka_conn_str():
+    kafka_sock = '54.145.37.197:9092'
+    return(kafka_sock)
 
 class NSDFEventStream:
     def __init__(self, ds, matchfns, termfn, streamname, name, fn):
