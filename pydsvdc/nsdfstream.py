@@ -20,10 +20,11 @@ def get_kafka_conn_str():
     return(kafka_sock)
 
 class NSDFEventStream:
-    def __init__(self, ds, matchfns, termfn, streamname, name, fn):
+    def __init__(self, ds, matchfns, termfn, streamname, name, fn, debug = False):
         topic = streamname
         conn_str = get_kafka_conn_str()
-        print(topic)
+        if debug:
+            print(f'topic = {topic}')
         self.consumer = KafkaConsumer(topic, bootstrap_servers=conn_str, value_deserializer=lambda x: json.loads(x.decode('utf-8')))
         self.handle = uuid.uuid1()
         self.ds = ds
@@ -31,6 +32,7 @@ class NSDFEventStream:
         self.termfn = termfn
         self.name = name
         self.fn = fn
+        self.debug = debug
 
     def __iter__(self):
         self.kiter = iter(self.consumer)
@@ -40,19 +42,31 @@ class NSDFEventStream:
         while True:
             message = next(self.kiter)
             url = message.value[0]
+            if self.debug:
+                print(f'url = {url}')
             if self.termfn(url):
+                if self.debug:
+                    print(f'{url} meets termination condtions')
                 raise StopIteration
             hit = True
             for fn in self.matchfns:
                 if not fn(url):
+                    if self.debug:
+                        print(f'{url} does not match')
                     hit = False
                     break
             if hit:
+                if self.debug:
+                    print(f'{url} matches')
                 ord_tstamp = url.split('_')[3][1:8] + 'T' + url.split('_')[3][8:-1]
                 tstamp = parser.isoparse(ord_tstamp)
                 dsver = _pack_version(tstamp.year, int(ord_tstamp[4:7]), tstamp.hour, tstamp.minute, check = 1)
                 if self.fn:
-                    return {'tstamp':tstamp, 'data':self.ds.Exec(self.name, dsver, fn=self.fn)}
+                    result = self.ds.Exec(self.name, dsver, fn=self.fn)
                 else:
-                    return {'tstamp':tstamp, 'data':self.ds.Get(self.name, dsver, None, None, -1, None)}
+                    result = self.ds.Get(self.name, dsver, None, None, -1, None)
+                if result is None:
+                    next
+                else:
+                    return {'tstamp':tstamp, 'data':result}
         return True

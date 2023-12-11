@@ -78,11 +78,15 @@ class DsVdc:
             fn = kwargs['xform']
         else:
             fn = None
+        if 'debug' in kwargs and kwargs['debug'] != False:
+            debug = True
+        else:
+            debug = False
         matchfns = []
         matchfns = [lambda a,name=name : re.compile(_get_abi_platform_id(name)).search(a)]
         matchfns.append(lambda a,start_time=start_time : _url_to_tstamp(a) >= start_time)
         termfn = lambda a, end_time=end_time : _url_to_tstamp(a) > end_time
-        estream = NSDFEventStream(self.ds, matchfns, termfn, self.topic, name, fn)
+        estream = NSDFEventStream(self.ds, matchfns, termfn, self.topic, name, fn, debug)
         return estream
 
     def query(self, **kwargs):
