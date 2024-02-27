@@ -7,5 +7,5 @@ setup(
    author='Philip Davis',
    author_email='philip.davis@sci.utah.edu',
    packages=['pydsvdc'],
-   install_requires=['wheel', 'bitstring', 'numpy', 's3fs', 'pymongo', 'kafka-python', 'uuid',]
+   install_requires=['wheel', 'bitstring', 'numpy', 's3fs', 'pymongo', 'kafka-python', 'uuid', 'matplotlib',]
 )
