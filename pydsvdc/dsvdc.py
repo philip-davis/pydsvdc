@@ -65,7 +65,7 @@ def _do_metadata_query(query):
 class DsVdc:
     def __init__(self, conn_str = None, domain = 'goes17', event_context = 'nasa-demo'):
         if conn_str is None and os.environ["DSPACES_IP"] and os.environ["DSPACES_PORT"]:
-            conn_str = f'sockets://{os.environ["DSPACES_IP"]}:{os.environ["DSPACES_PORT"]}'
+            conn_str = f'tcp://{os.environ["DSPACES_IP"]}:{os.environ["DSPACES_PORT"]}'
         self.domain = domain
         self.ds = DSClient(conn = conn_str)
         self.ds.SetNSpace(domain)
